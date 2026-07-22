@@ -63,6 +63,12 @@ test("keeps the Eternal live-match and expanded champion pool wired", async () =
   assert.match(css, /\.facts\{display:grid;width:100%;grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
   assert.match(css, /\.identity-preview>div:only-child\{display:block;width:100%;min-width:0\}/);
   assert.match(data, /specialRatings:Record<string,number>=\{aimar:99,jonas:96\}/);
+  assert.match(data, /"4-2-4":\["GR","LE","DC","DC","LD","MC","MC","EE","PL","PL","ED"\]/);
+  assert.match(data, /"4-4-2":\["GR","LE","DC","DC","LD","EE","MC","MC","ED","PL","PL"\]/);
+  assert.match(data, /formationHistory:Record<Formation/);
+  assert.doesNotMatch(data, /"3-4-3"/);
+  assert.match(page, /useState<Formation>\("4-2-4"\)/);
+  assert.match(page, /Cinco sistemas inspirados em diferentes eras táticas do clube/);
   assert.match(page, /Partilhar o desafio/);
   assert.match(page, /Privacidade e aviso legal/);
   assert.match(page, /Projeto independente/);
