@@ -104,7 +104,8 @@ const raw:R[]=[
 ["vata","Vata","1988–91",["PL","EE"],91,85,["Matador","Noite europeia"],"O golo que levou o Benfica à final de 1990."],
 ];
 export const players:Player[]=raw.map(([id,name,era,positions,benfica,career,traits,note])=>({id,name,era,positions,benfica,career,traits,note}));
-export const rating=(p:Player)=>Math.round(p.benfica*.6+p.career*.4);
+const specialRatings:Record<string,number>={aimar:99,jonas:96};
+export const rating=(p:Player)=>specialRatings[p.id]??Math.round(p.benfica*.6+p.career*.4);
 export type Coach={id:string;name:string;era:string;rating:number;style:string;bonus:string;trait:"ataque"|"defesa"|"controlo"|"europa"};
 export const coaches:Coach[]=[
 {id:"guttmann",name:"Béla Guttmann",era:"1959–62",rating:97,style:"Coragem europeia",bonus:"+4 nas eliminatórias",trait:"europa"},
