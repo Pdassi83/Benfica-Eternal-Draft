@@ -69,6 +69,7 @@ test("keeps the Eternal live-match and expanded champion pool wired", async () =
   assert.doesNotMatch(data, /"3-4-3"/);
   assert.match(page, /useState<Formation>\("4-2-4"\)/);
   assert.match(page, /Cinco sistemas inspirados em diferentes eras táticas do clube/);
+  assert.match(page, /querySelector\("\.match"\)\?\.scrollIntoView\(\{behavior:"smooth",block:"start"\}\)/);
   assert.match(page, /Partilhar o desafio/);
   assert.match(page, /Privacidade e aviso legal/);
   assert.match(page, /Projeto independente/);
