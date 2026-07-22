@@ -66,3 +66,9 @@ main{min-width:0;overflow-x:hidden}.end.champion{position:relative;isolation:iso
 @media(max-width:1050px){.identity-preview{grid-template-columns:1fr}.identity-preview>div:last-child{grid-template-columns:repeat(5,minmax(0,1fr))}}
 @media(max-width:760px){.player-card .player-identity{height:auto;aspect-ratio:16/9;margin:2px -9px 7px}.player-identity:before{inset:8% 29%}.player-identity>b{font-size:30px}.player-identity>i{top:5px;left:6px;width:23px;height:23px}.player-identity>small{right:5px;bottom:5px;padding:3px 4px;font-size:4.5px}.identity-preview{padding:55px 15px}.identity-preview h2{font-size:36px}.identity-preview>div:last-child{grid-template-columns:repeat(2,minmax(0,1fr))}.pitch-pos{width:52px}.pitch-marker{width:28px;height:28px}.pitch-pos>small{width:52px;padding-inline:2px;font-size:5.5px}.legend-list>div{grid-template-columns:38px 34px minmax(0,1fr)}.legend-list>div>.legend-mark{width:38px;height:38px;font-size:12px}}
 @media(max-width:380px){.player-card .player-identity{margin-inline:-7px}.player-identity>b{font-size:26px}.identity-preview h2{font-size:32px}.pitch-pos{width:48px}.pitch-pos>small{width:48px;font-size:5px}}
+
+/* v0.8 — entrada móvel contida e montra sem imagens */
+.identity-preview{grid-template-columns:minmax(0,720px);justify-content:center;text-align:center}
+.identity-preview>div:first-child>p{max-width:650px;margin-inline:auto}
+@media(max-width:760px){.hero-copy{min-width:0;overflow:hidden}.facts{display:grid;width:100%;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:42px}.facts span{min-width:0;align-items:flex-start;flex-direction:column;gap:3px;font-size:6px}.facts b{font-size:27px}.archive-link{max-width:100%;white-space:normal;text-align:left}}
+@media(max-width:380px){.facts{gap:5px}.facts b{font-size:24px}.facts span{font-size:5.5px}}
