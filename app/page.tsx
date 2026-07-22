@@ -1,0 +1,126 @@
+"use client";
+import {useEffect,useMemo,useState} from "react";
+import {coaches,formations,links,players,rating,rivals,type Coach,type Formation,type Player,type Rival,type Slot} from "./data";
+
+type Pick={slot:Slot;player:Player};
+type GoalEvent={minute:number;team:"SLB"|"RIVAL";scorer:string};
+type PenaltyEvent={team:"SLB"|"RIVAL";player:string;scored:boolean};
+type Result={rival:Rival;stage:string;us:number;them:number;out:"V"|"E"|"D";pens?:[number,number];scorers:string[];goals:GoalEvent[];regulation:[number,number];extra?:[number,number];penalties?:PenaltyEvent[]};
+type LiveMatch={result:Result;clock:number;penIndex:number;kind:"campaign"|"friendly"};
+const stages=["Jornada 1","Jornada 2","Jornada 3","Quartos-de-final","Meia-final","Final"];
+const clamp=(n:number,a:number,b:number)=>Math.max(a,Math.min(b,n));
+const poisson=(l:number)=>{let p=1,k=0;const L=Math.exp(-l);while(p>L&&k<8){k++;p*=Math.random()}return Math.max(0,k-1)};
+const compat=(p:Player,s:Slot)=>p.positions.includes(s)||(s==="AE"&&p.positions.includes("EE"))||(s==="AD"&&p.positions.includes("ED"));
+const CURRENT_CREST="/assets/benfica-current.png";
+const FIRST_CREST="/assets/sport-lisboa-1904.png";
+const COSME_DAMIAO="/assets/cosme-damiao.jpg";
+const TROPHY_IMAGE="/assets/champions-trophy.webp";
+const SHOWCASE_IDS=["costa-pereira","germano","coluna","chalana","rui-costa","eusebio","jvp","simao","aimar","jonas"];
+const hash=(value:string)=>[...value].reduce((sum,char,index)=>sum+char.charCodeAt(0)*(index+11),0);
+const initials=(name:string)=>{const parts=name.trim().split(/\s+/);return `${parts[0]?.[0]||""}${parts.length>1?parts[parts.length-1][0]:""}`.toLocaleUpperCase("pt")};
+const pitchName=(name:string)=>{const parts=name.trim().split(/\s+/);return parts.length<2?name:`${parts[0][0]}. ${parts[parts.length-1]}`};
+const drawRoute=()=>[...rivals].map(r=>({r,n:Math.random()})).sort((a,b)=>a.n-b.n).slice(0,6).map(x=>x.r);
+const pitchLayouts:Record<Formation,{x:number;y:number}[]>={
+ "4-3-3":[{x:50,y:89},{x:14,y:70},{x:38,y:74},{x:62,y:74},{x:86,y:70},{x:34,y:49},{x:66,y:49},{x:50,y:34},{x:18,y:16},{x:50,y:10},{x:82,y:16}],
+ "4-2-3-1":[{x:50,y:89},{x:14,y:70},{x:38,y:74},{x:62,y:74},{x:86,y:70},{x:37,y:54},{x:63,y:54},{x:18,y:31},{x:50,y:31},{x:82,y:31},{x:50,y:10}],
+ "4-4-2 D":[{x:50,y:89},{x:14,y:70},{x:38,y:74},{x:62,y:74},{x:86,y:70},{x:50,y:57},{x:28,y:43},{x:72,y:43},{x:50,y:29},{x:34,y:11},{x:66,y:11}],
+ "3-4-3":[{x:50,y:89},{x:25,y:73},{x:50,y:76},{x:75,y:73},{x:13,y:48},{x:38,y:49},{x:62,y:49},{x:87,y:48},{x:18,y:16},{x:50,y:10},{x:82,y:16}]
+};
+
+function chemistry(picks:Pick[],coach:Coach){
+ const ids=new Set(picks.map(x=>x.player.id));
+ const active=links.filter(x=>x[0].every(id=>ids.has(id)));
+ const eras=picks.reduce<Record<string,number>>((a,x)=>{const e=x.player.era.slice(0,3);a[e]=(a[e]||0)+1;return a},{});
+ const era=Object.values(eras).reduce((s,n)=>s+Math.max(0,n-1)*2,0);
+ const captains=picks.filter(x=>x.player.traits.includes("Capitão")).length;
+ return {score:clamp(48+era+active.reduce((s,x)=>s+x[2],0)+Math.min(6,captains*2)+(coach.trait==="controlo"?5:3),48,100),active};
+}
+function power(picks:Pick[],coach:Coach){
+ if(!picks.length)return{overall:0,att:0,mid:0,def:0,chem:48};
+ const ch=chemistry(picks,coach).score, avg=(arr:Pick[])=>arr.reduce((s,x)=>s+rating(x.player),0)/Math.max(1,arr.length);
+ const all=avg(picks), by=(ss:Slot[])=>{const a=picks.filter(x=>ss.includes(x.slot));return a.length?avg(a):all};
+ return{overall:Math.round(clamp(all+(ch-60)/10+(coach.rating-88)/8,75,99)),att:Math.round(clamp(by(["PL","EE","ED","MO"])+(coach.trait==="ataque"?3:0),70,99)),mid:Math.round(clamp(by(["MD","MC","MO","AE","AD"]),70,99)),def:Math.round(clamp(by(["GR","LD","DC","LE","MD"])+(coach.trait==="defesa"?3:0),70,99)),chem:ch};
+}
+function probability(us:number,them:number){return Math.round(100/(1+10**((them-us)/12)))}
+function penaltyShootout(picks:Pick[],rival:Rival,edge:number){
+ const slb=picks.filter(x=>x.slot!=="GR").sort((a,b)=>rating(b.player)-rating(a.player)).map(x=>x.player.name),them=rival.core.split(" · ");
+ const events:PenaltyEvent[]=[];let us=0,op=0;
+ const kick=(team:"SLB"|"RIVAL",i:number,forced?:boolean)=>{const scored=forced??(Math.random()<(team==="SLB"?.74+edge:.74));events.push({team,player:(team==="SLB"?slb:them)[i%(team==="SLB"?slb.length:them.length)]||rival.name,scored});if(scored){if(team==="SLB")us++;else op++}};
+ for(let i=0;i<5;i++){kick("SLB",i);kick("RIVAL",i)}
+ let i=5;while(us===op&&i<9){kick("SLB",i);kick("RIVAL",i);i++}
+ if(us===op){const slbWins=Math.random()<.5+edge;kick("SLB",i,slbWins);kick("RIVAL",i,!slbWins)}
+ return{score:[us,op] as [number,number],events};
+}
+function simulate(picks:Pick[],coach:Coach,rival:Rival,stage:string):Result{
+ const p=power(picks,coach),ko=!stage.startsWith("Jornada")&&stage!=="Exibição", clutch=picks.filter(x=>x.player.traits.includes("Noite europeia")).length;
+ const attackers=picks.filter(x=>["PL","EE","ED","MO","MC"].includes(x.slot));
+ const rivalPlayers=rival.core.split(" · "),pickScorer=()=>attackers[Math.floor(Math.random()*attackers.length)]?.player.name||"Benfica",pickRival=()=>rivalPlayers[Math.floor(Math.random()*rivalPlayers.length)]||rival.name;
+ const regUs=poisson(clamp(1.25+(p.att-rival.def)/13+(p.chem-60)/35+(ko&&coach.trait==="europa"?.24:0)+clutch*.025,.2,3.8));
+ const regThem=poisson(clamp(1.15+(rival.att-p.def)/13-(p.chem-60)/55,.2,3.6));
+ const makeGoals=(count:number,team:"SLB"|"RIVAL",from:number,to:number)=>Array.from({length:count},()=>({minute:from+Math.floor(Math.random()*(to-from+1)),team,scorer:team==="SLB"?pickScorer():pickRival()}));
+ const goals=[...makeGoals(regUs,"SLB",4,89),...makeGoals(regThem,"RIVAL",4,89)];
+ let us=regUs,them=regThem,extra:Result["extra"],pens:Result["pens"],penalties:PenaltyEvent[]|undefined;
+ if(ko&&us===them){const etUs=poisson(clamp(.28+(p.att-rival.def)/45,.05,.75)),etThem=poisson(clamp(.26+(rival.att-p.def)/45,.05,.75));us+=etUs;them+=etThem;extra=[us,them];goals.push(...makeGoals(etUs,"SLB",94,119),...makeGoals(etThem,"RIVAL",94,119));if(us===them){const shoot=penaltyShootout(picks,rival,(probability(p.overall+clutch*.1,rival.rating)-50)/250);pens=shoot.score;penalties=shoot.events}}
+ goals.sort((a,b)=>a.minute-b.minute);
+ let out:Result["out"]=us>them?"V":us<them?"D":"E";if(pens)out=pens[0]>pens[1]?"V":"D";
+ const scorers=goals.filter(g=>g.team==="SLB").map(g=>g.scorer);
+ return{rival,stage,us,them,out,pens,scorers,goals,regulation:[regUs,regThem],extra,penalties};
+}
+
+function Crest({small=false}:{small?:boolean}){return <img className={`crest ${small?"small":""}`} src={CURRENT_CREST} alt="Emblema do Sport Lisboa e Benfica"/>}
+function Pitch({formation,picks,active}:{formation:Formation,picks:Pick[],active?:number}){
+ return <div className="pitch"><div className="pitch-lines"/>{formations[formation].map((slot,i)=>{const pick=picks[i],position=pitchLayouts[formation][i];return <div className={`pitch-pos ${pick?"filled":""} ${active===i?"active":""}`} style={{left:`${position.x}%`,top:`${position.y}%`}} key={i}><span className="pitch-marker"><b>{pick?rating(pick.player):slot}</b>{pick&&<i>{slot}</i>}</span>{pick&&<small title={pick.player.name}>{pitchName(pick.player.name)}</small>}</div>})}</div>
+}
+function PlayerIdentity({p}:{p:Player}){return <span className="player-identity" aria-hidden="true"><i>{p.positions[0]}</i><b>{initials(p.name)}</b><small>SLB · {p.era}</small></span>}
+function PlayerCard({p,onClick,chemDelta}:{p:Player,onClick:()=>void;chemDelta:number}){return <button className="player-card" onClick={onClick}><span className="card-top"><b>{rating(p)}</b><i>{p.positions.join(" · ")}</i></span><span className="card-signal"><small>{chemDelta>0?`+${chemDelta} química`:"sem ligação nova"}</small></span><PlayerIdentity p={p}/><small>{p.era}</small><strong>{p.name}</strong><p>{p.note}</p><span className="scores"><i>SLB <b>{p.benfica}</b></i><i>CAR <b>{p.career}</b></i></span><span className="traits">{p.traits.slice(0,3).map(t=><i key={t}>{t}</i>)}</span><em>Escolher lenda →</em></button>}
+function Bar({name,value}:{name:string,value:number}){return <div className="bar"><span>{name}</span><b>{value}</b><i><em style={{width:`${value}%`}}/></i></div>}
+function LiveMatchView({live,onSkip}:{live:LiveMatch;onSkip:()=>void}){
+ const {result,clock,penIndex}=live,max=result.extra?120:90,goals=result.goals.filter(g=>g.minute<=clock),us=goals.filter(g=>g.team==="SLB").length,them=goals.length-us,pens=(result.penalties||[]).slice(0,penIndex),penUs=pens.filter(p=>p.team==="SLB"&&p.scored).length,penThem=pens.filter(p=>p.team==="RIVAL"&&p.scored).length;
+ const phase=clock<45?"1.ª parte":clock<90?"2.ª parte":clock<120&&result.extra?"Prolongamento":result.penalties&&penIndex<result.penalties.length?"Penáltis":"Fim";
+ return <div className="live-match"><div className="live-top"><span><i/> Em direto · {phase}</span><button onClick={onSkip}>Saltar para o fim »</button></div><div className="live-score"><div><Crest/><b>SL Benfica</b></div><span><small>{Math.min(clock,max)}&apos;</small><b>{us} — {them}</b>{pens.length>0&&<i>Penáltis {penUs}–{penThem}</i>}</span><div><i className="rival-crest" style={{background:`linear-gradient(135deg,${result.rival.colors[0]} 50%,${result.rival.colors[1]} 50%)`}}>{result.rival.name.slice(0,3)}</i><b>{result.rival.name}</b></div></div><div className="live-progress"><i style={{width:`${Math.min(100,clock/max*100)}%`}}/></div><div className="live-feed">{!goals.length&&!pens.length?<p><b>{clock||1}&apos;</b> O jogo começou. A história está em movimento.</p>:<>{[...goals].reverse().slice(0,4).map((g,i)=><p className={g.team==="SLB"?"slb":"rival"} key={`${g.minute}-${g.scorer}-${i}`}><b>{g.minute}&apos;</b><span>⚽ {g.scorer}<small>{g.team==="SLB"?"SL Benfica":result.rival.name}</small></span></p>)}{pens.map((p,i)=><p className={`${p.team==="SLB"?"slb":"rival"} penalty ${p.scored?"scored":"missed"}`} key={`${p.player}-${i}`}><b>{p.scored?"✓":"×"}</b><span>{p.player}<small>{p.team==="SLB"?"Benfica":result.rival.name} · {p.scored?"marcou":"falhou"}</small></span></p>)}</>}</div></div>
+}
+
+export default function Home(){
+ const[view,setView]=useState<"home"|"draft"|"cup">("home");
+ const[formation,setFormation]=useState<Formation>("4-3-3");
+ const[coachId,setCoachId]=useState("guttmann");
+ const[picks,setPicks]=useState<Pick[]>([]);
+ const[results,setResults]=useState<Result[]>([]);
+ const[status,setStatus]=useState<"on"|"out"|"champ">("on");
+ const[report,setReport]=useState<Result|null>(null);
+ const[friendly,setFriendly]=useState<Result|null>(null);
+ const[method,setMethod]=useState(false);
+ const[archiveOpen,setArchiveOpen]=useState(false);
+ const[archiveQuery,setArchiveQuery]=useState("");
+ const[rerolls,setRerolls]=useState(2);
+ const[packSeed,setPackSeed]=useState(0);
+ const[route,setRoute]=useState<Rival[]>(()=>rivals.slice(0,6));
+ const[live,setLive]=useState<LiveMatch|null>(null);
+ const coach=coaches.find(x=>x.id===coachId)||coaches[0], slots=formations[formation], slot=slots[picks.length], team=power(picks,coach), chem=chemistry(picks,coach);
+ const candidates=useMemo(()=>slot?players.filter(p=>!picks.some(x=>x.player.id===p.id)&&compat(p,slot)).sort((a,b)=>((hash(a.id)*(picks.length+7+packSeed*13))%997)-((hash(b.id)*(picks.length+7+packSeed*13))%997)).slice(0,4):[],[slot,picks,packSeed]);
+ const filteredPlayers=players.filter(p=>`${p.name} ${p.era} ${p.positions.join(" ")}`.toLocaleLowerCase("pt").includes(archiveQuery.toLocaleLowerCase("pt").trim()));
+ const rival=route[results.length],psg=rivals.find(r=>r.current)||rivals[0],points=results.slice(0,3).reduce((s,r)=>s+(r.out==="V"?3:r.out==="E"?1:0),0);
+ const start=()=>{setPicks([]);setResults([]);setStatus("on");setFriendly(null);setLive(null);setRerolls(2);setPackSeed(0);setRoute(drawRoute());setView("draft")};
+ const reroll=()=>{if(!rerolls)return;setRerolls(x=>x-1);setPackSeed(x=>x+1)};
+ const play=()=>{if(!rival||live)return;setLive({result:simulate(picks,coach,rival,stages[results.length]),clock:0,penIndex:0,kind:"campaign"})};
+ const playFriendly=()=>{if(live)return;setLive({result:simulate(picks,coach,psg,"Exibição"),clock:0,penIndex:0,kind:"friendly"})};
+ const skipLive=()=>setLive(x=>x?{...x,clock:x.result.extra?120:90,penIndex:x.result.penalties?.length||0}:x);
+ const restart=()=>{setResults([]);setStatus("on");setReport(null);setLive(null);setRoute(drawRoute())};
+ useEffect(()=>{window.scrollTo({top:0,left:0,behavior:"auto"})},[view]);
+ useEffect(()=>{if(!live)return;const max=live.result.extra?120:90;let timer:ReturnType<typeof setTimeout>;if(live.clock<max){timer=setTimeout(()=>setLive(x=>x?{...x,clock:Math.min(max,x.clock+3)}:x),700)}else if(live.result.penalties&&live.penIndex<live.result.penalties.length){timer=setTimeout(()=>setLive(x=>x?{...x,penIndex:x.penIndex+1}:x),850)}else{timer=setTimeout(()=>{const r=live.result;if(live.kind==="friendly")setFriendly(r);else{const next=[...results,r];setResults(next);if(results.length===2&&next.reduce((s,x)=>s+(x.out==="V"?3:x.out==="E"?1:0),0)<4)setStatus("out");else if(results.length>=3&&r.out==="D")setStatus("out");else if(results.length===5&&r.out==="V")setStatus("champ")}setReport(r);setLive(null)},1000)}return()=>clearTimeout(timer)},[live,results]);
+ return <main>
+  <header><button className="brand" onClick={()=>setView("home")}><Crest small/><span><b>Benfica</b><small>Eternal Draft</small></span></button><nav><span className={view==="home"?"on":""}>01 Preparar</span><span className={view==="draft"?"on":""}>02 Draft</span><span className={view==="cup"?"on":""}>03 Champions</span></nav><button className="plain" onClick={()=>setMethod(true)}>Como calculamos?</button></header>
+  {view==="home"&&<>
+   <section className="hero"><div className="hero-copy"><img className="cosme" src={COSME_DAMIAO} alt="Cosme Damião em 1917"/><span className="eyebrow">Uma experiência impossível · agora jogável</span><h1>Onze lendas.<br/><i>Uma Europa eterna.</i></h1><p>Constrói o melhor Benfica de sempre e enfrenta as equipas que marcaram a Taça dos Campeões e a Champions League.</p><a className="primary" href="#setup">Começar o draft →</a><div className="facts"><span><b>100</b>Lendas</span><span><b>10</b>Treinadores</span><span><b>{rivals.length}</b>Campeões</span></div><button className="archive-link" onClick={()=>setArchiveOpen(true)}>Explorar as 100 lendas ↗</button></div><div className="hero-art"><span className="stamp">1904 — ∞</span><div className="crest-evolution"><figure><img src={FIRST_CREST} alt="Primeiro emblema do Grupo Sport Lisboa"/><figcaption>Sport Lisboa · 1904</figcaption></figure><span><i>origem</i><b>×</b><i>eterno</i></span><figure><img src={CURRENT_CREST} alt="Emblema atual do Sport Lisboa e Benfica"/><figcaption>Sport Lisboa e Benfica · atual</figcaption></figure></div></div></section>
+   <section className="setup" id="setup"><div className="title"><span>Passo 01</span><div><h2>Prepara o teu Benfica</h2><p>A formação define as onze rondas do draft.</p></div></div><div className="setup-grid"><article><h3>01.A · Formação</h3><div className="formations">{(Object.keys(formations)as Formation[]).map(f=><button className={formation===f?"selected":""} onClick={()=>setFormation(f)} key={f}><b>{f}</b><small>{formations[f].join(" · ")}</small><i>{formation===f?"✓":"+"}</i></button>)}</div><Pitch formation={formation} picks={[]}/></article><article><h3>01.B · Treinador</h3><div className="coaches">{coaches.map(c=><button className={coachId===c.id?"selected":""} onClick={()=>setCoachId(c.id)} key={c.id}><b>{c.rating}</b><span><strong>{c.name}</strong><small>{c.era} · {c.style}</small></span><i>{coachId===c.id?"✓":"+"}</i></button>)}</div><p className="bonus"><span>Vantagem</span><b>{coach.bonus}</b></p></article></div><button className="primary wide" onClick={start}>Entrar na sala do draft →</button></section>
+   <section className="identity-preview"><div><span className="eyebrow">Coleção Eternal · 100/100</span><h2>Cem identidades.<br/><i>Nenhum rosto inventado.</i></h2><p>Cada lenda recebe uma marca gráfica coerente com a coleção. A escolha depende do legado, da posição e dos atributos — nunca de uma imagem pouco fiel.</p></div><div>{SHOWCASE_IDS.map(id=>{const p=players.find(x=>x.id===id);return p?<figure key={id}><PlayerIdentity p={p}/><figcaption><b>{p.name}</b><small>{p.era}</small></figcaption></figure>:null})}</div></section>
+   <section className="manifest"><small>O princípio</small><h2>“Não escolhemos as maiores carreiras. Escolhemos quem foi maior <i>com o Benfica</i>.”</h2><p><b>60%</b> Benfica <b>40%</b> carreira <b>+</b> contexto</p></section>
+  </>}
+  {view==="draft"&&<section className="shell"><div className="game-title"><div><span className="eyebrow">Sala do draft · Ronda {Math.min(11,picks.length+1)} de 11 · 100 lendas</span><h1>{slot?<>Escolhe o teu <i>{slot}</i></>:<>O onze está <i>fechado</i></>}</h1></div><b className="round">{picks.length}<small>/11</small></b></div><div className="draft-layout"><aside className="squad"><p><span>O teu onze</span><b>{formation}</b></p><Pitch formation={formation} picks={picks} active={slot?picks.length:undefined}/><div className="mini"><span>Rating <b>{team.overall||"—"}</b></span><span>Química <b>{team.chem}</b></span><span>Spins <b>{rerolls}</b></span></div><button disabled={!picks.length} onClick={()=>setPicks(x=>x.slice(0,-1))}>← Voltar uma escolha</button></aside><div className="board">{slot?<><div className="draft-rules"><p><b>{rerolls}</b><span>spins disponíveis<small>para todo o draft</small></span></p><div><span>Recebes quatro lendas por posição. Guarda os spins para quando nenhuma encaixar no teu plano.</span><button onClick={reroll} disabled={!rerolls}>Girar novas cartas · {rerolls}</button></div></div><p className="instruction">Não há orçamento nem cartas bloqueadas: podes sempre completar o XI e voltar à escolha anterior. <b>Posição: {slot}</b></p><div className="cards">{candidates.map(p=><PlayerCard p={p} chemDelta={chemistry([...picks,{slot,player:p}],coach).score-chem.score} onClick={()=>setPicks(x=>[...x,{slot,player:p}])} key={p.id}/>)}</div></>:<div className="complete"><b>XI</b><h2>A Europa espera.</h2><p>Rating {team.overall}, química {team.chem} e {chem.active.length} ligações históricas.</p><div>{chem.active.length?chem.active.map(x=><span key={x[1]}>+{x[2]} {x[1]}</span>):<span>Sem duplas históricas ativas.</span>}</div><button className="primary" onClick={()=>setView("cup")}>Entrar na Champions Eternal →</button></div>}</div></div></section>}
+  {view==="cup"&&<section className="shell cup"><div className="game-title"><div><span className="eyebrow">Champions Eternal · Sorteio aleatório · Temporada ∞</span><h1>A história não chega.<br/><i>É preciso ganhá-la.</i></h1></div><b className="round">{team.overall}</b></div><div className="cup-grid"><aside className="team"><p><b>SL Benfica</b><small>{formation} · {coach.name}</small></p><Pitch formation={formation} picks={picks}/><div><Bar name="Ataque" value={team.att}/><Bar name="Meio-campo" value={team.mid}/><Bar name="Defesa" value={team.def}/><Bar name="Química" value={team.chem}/></div><button onClick={()=>setView("draft")}>Rever o onze</button></aside><article className="match">{live?<LiveMatchView live={live} onSkip={skipLive}/>:<>{status==="on"&&rival&&<><p className="next"><span>Próximo jogo · sorteio desta campanha</span><b>{stages[results.length]}</b></p><div className="versus"><div><Crest/><b>SL Benfica</b><small>Eternal XI</small></div><span><i>VS</i><b>{probability(team.overall,rival.rating)}%</b><small>hipótese SLB</small></span><div><i className="rival-crest" style={{background:`linear-gradient(135deg,${rival.colors[0]} 50%,${rival.colors[1]} 50%)`}}>{rival.name.slice(0,3)}</i><b>{rival.name}</b><small>Campeão {rival.edition}</small></div></div><p className="identity"><span>{rival.identity}</span><b>{rival.core}</b></p><button className="primary wide" onClick={play}>Ver o encontro ▶</button></>}{status!=="on"&&<div className={`end ${status==="champ"?"champion":""}`}>{status==="champ"?<div className="trophy"><i>Champions Eternal</i><img src={TROPHY_IMAGE} alt="Taça da Champions Eternal"/><span>∞</span></div>:<b>FT</b>}<small>{status==="champ"?"Campeão da Champions Eternal":"Fim da campanha"}</small><h2>{status==="champ"?"O impossível vestiu de vermelho.":"A história também se escreve a perder."}</h2><p>{status==="champ"?"O teu onze levantou a taça contra os campeões de todas as eras.":"Mantém o onze e tenta novamente, com um novo sorteio de adversários."}</p><button className="primary" onClick={restart}>Novo sorteio ↻</button></div>}</>}</article><aside className="route"><h3>Rota sorteada <b>{results.length}/6</b></h3>{route.map((r,i)=>{const x=results[i];return <div className={i===results.length&&status==="on"?"next":""} key={r.id}><span>{i<3?`J${i+1}`:i===3?"QF":i===4?"SF":"F"}</span><p><b>{r.name}</b><small>{r.edition}</small></p>{x?<strong className={x.out}>{x.us}–{x.them}</strong>:<i>{r.rating}</i>}</div>})}<p className="points">Pontos iniciais <b>{points}/9</b></p></aside></div><section className="psg"><div><small>● Laboratório Eternal</small><h2>Este onze ganharia ao atual campeão europeu?</h2><p>{psg.name} {psg.edition} · rating {psg.rating}</p></div><div>{friendly?<b>SLB {friendly.us}–{friendly.them} {psg.name}</b>:<><b>{probability(team.overall,psg.rating)}%</b><small>hipótese estimada</small></>}</div><button onClick={playFriendly}>{friendly?"Testar novamente":"Ver o teste"} →</button></section><section className="archive"><div><span className="eyebrow">Arquivo de adversários</span><h2>{rivals.length} campeões. Um sorteio diferente em cada campanha.</h2></div><div>{rivals.map(r=><article key={r.id}><i style={{background:`linear-gradient(135deg,${r.colors[0]} 50%,${r.colors[1]} 50%)`}}>{r.name.slice(0,3)}</i><span><b>{r.name}</b><small>{r.edition} · {r.identity}</small></span><strong>{r.rating}</strong></article>)}</div></section></section>}
+  {report&&<div className="modal" onClick={()=>setReport(null)}><article className="report-modal" onClick={e=>e.stopPropagation()}><button onClick={()=>setReport(null)}>×</button><span className="eyebrow">{report.stage} · Resultado final</span><h2>SL Benfica <b>{report.us}–{report.them}</b> {report.rival.name}</h2>{report.extra&&<p>Após prolongamento · 90&apos;: {report.regulation[0]}–{report.regulation[1]}</p>}{report.pens&&<p>Desempate por penáltis: <b>{report.pens[0]}–{report.pens[1]}</b></p>}<div className="scorers">{report.goals.length?report.goals.map((g,i)=><span key={i}>{g.team==="SLB"?"⚽":"◌"} {g.minute}&apos; · {g.scorer} <small>{g.team==="SLB"?"Benfica":report.rival.name}</small></span>):<span>Jogo fechado. Sem golos.</span>}</div>{report.penalties&&<div className="pen-report"><b>Marca dos 11 metros</b>{report.penalties.map((p,i)=><span className={p.scored?"scored":"missed"} key={i}><i>{p.scored?"✓":"×"}</i>{p.player}<small>{p.team==="SLB"?"SLB":report.rival.name}</small></span>)}</div>}<button className="primary" onClick={()=>setReport(null)}>Continuar →</button></article></div>}
+  {archiveOpen&&<div className="modal legend-modal" onClick={()=>setArchiveOpen(false)}><article onClick={e=>e.stopPropagation()}><button onClick={()=>setArchiveOpen(false)}>×</button><span className="eyebrow">Arquivo Eternal · {players.length} jogadores</span><h2>As lendas <i>em jogo.</i></h2><input value={archiveQuery} onChange={e=>setArchiveQuery(e.target.value)} placeholder="Procurar: João Vieira Pinto, Cancelo, Léo…" autoFocus/><p className="legend-count">{filteredPlayers.length} cartas encontradas</p><div className="legend-list">{filteredPlayers.map(p=><div key={p.id}><i className="legend-mark">{initials(p.name)}</i><b>{rating(p)}</b><span><strong>{p.name}</strong><small>{p.era} · {p.positions.join(" / ")}</small></span></div>)}</div></article></div>}
+  {method&&<div className="modal" onClick={()=>setMethod(false)}><article onClick={e=>e.stopPropagation()}><button onClick={()=>setMethod(false)}>×</button><span className="eyebrow">Modelo Eternal v0.7</span><h2>A carreira conta.<br/><i>O Benfica conta mais.</i></h2><div className="formula"><b>60%<small>Benfica</small></b><i>+</i><b>40%<small>Carreira</small></b><i>+</i><b>CTX<small>Traços</small></b></div><p>A nota aplica o rácio 60/40 e os traços entram quando o contexto os ativa. A limitação vem apenas do pack aleatório e dos dois spins.</p><ul><li><b>Quatro cartas</b> por posição, escolhidas entre 100 jogadores.</li><li><b>Dois spins</b> para trocar o pack durante todo o draft.</li><li><b>Sorteio aleatório</b> de seis adversários em cada campanha.</li><li><b>Jogo em direto</b> com golos, prolongamento e penáltis detalhados.</li></ul></article></div>}
+  <footer><span>Benfica Eternal Draft · v0.7</span><p><a href="https://commons.wikimedia.org/wiki/File:Cosme_Dami%C3%A3o_Benfica.jpg">Cosme Damião · domínio público</a> · <a href="https://www.slbenfica.pt/pt-pt/instituicao/clube/historia/simbolos">Símbolos SLB</a> · <a href="https://www.uefa.com/uefachampionsleague/history/winners/">Arquivo UEFA</a></p></footer>
+ </main>
+}
