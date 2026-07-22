@@ -72,3 +72,7 @@ main{min-width:0;overflow-x:hidden}.end.champion{position:relative;isolation:iso
 .identity-preview>div:first-child>p{max-width:650px;margin-inline:auto}
 @media(max-width:760px){.hero-copy{min-width:0;overflow:hidden}.facts{display:grid;width:100%;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:42px}.facts span{min-width:0;align-items:flex-start;flex-direction:column;gap:3px;font-size:6px}.facts b{font-size:27px}.archive-link{max-width:100%;white-space:normal;text-align:left}}
 @media(max-width:380px){.facts{gap:5px}.facts b{font-size:24px}.facts span{font-size:5.5px}}
+
+/* v0.9 — preparação para beta pública */
+.launch-links{display:flex;flex-wrap:wrap;gap:12px 22px;margin-top:22px}.launch-links .archive-link{margin-top:0}.legal-modal p{max-width:560px}.legal-modal .primary{margin-top:16px}footer{gap:18px}footer p{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:6px}footer button{text-decoration:underline;text-underline-offset:3px}
+@media(max-width:760px){.launch-links{align-items:flex-start;flex-direction:column;margin-top:16px}.launch-links .archive-link{min-height:32px}footer p{justify-content:flex-start;line-height:1.8}}
