@@ -34,10 +34,13 @@ test("renders development preview metadata", async () => {
 });
 
 test("keeps the Eternal live-match and expanded champion pool wired", async () => {
-  const [page, data, css] = await Promise.all([
+  const [page, data, css, layout, manifest, robots] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/data.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
+    readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../public/manifest.webmanifest", import.meta.url), "utf8"),
+    readFile(new URL("../public/robots.txt", import.meta.url), "utf8"),
   ]);
 
   assert.match(page, /type LiveMatch=/);
@@ -59,6 +62,13 @@ test("keeps the Eternal live-match and expanded champion pool wired", async () =
   assert.match(css, /\.pitch-pos>small\{display:block;width:62px/);
   assert.match(css, /\.facts\{display:grid;width:100%;grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
   assert.match(data, /specialRatings:Record<string,number>=\{aimar:99,jonas:96\}/);
+  assert.match(page, /Partilhar o desafio/);
+  assert.match(page, /Privacidade e aviso legal/);
+  assert.match(page, /Projeto independente/);
+  assert.match(layout, /openGraph:/);
+  assert.match(layout, /manifest: "\/manifest\.webmanifest"/);
+  assert.equal(JSON.parse(manifest).display, "standalone");
+  assert.match(robots, /Allow: \//);
   const rivalBlock = data.split("export const rivals:Rival[]=")[1] ?? "";
   assert.equal((rivalBlock.match(/^\{id:/gm) ?? []).length, 24);
   assert.equal((data.match(/current:true/g) ?? []).length, 1);
