@@ -34,3 +34,7 @@ npm run lint
 ## Nota
 
 Este é um projeto ficcional e não oficial, sem afiliação ao Sport Lisboa e Benfica ou à UEFA.
+
+## Deploy na Netlify
+
+O repositório inclui uma configuração `netlify.toml`. Ao ligar o repositório à Netlify, usa a branch `main`; o build `npm run build:netlify`, a pasta publicada `out` e o Node.js 22.13 são aplicados automaticamente.
