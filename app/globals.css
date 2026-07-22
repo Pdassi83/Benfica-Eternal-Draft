@@ -83,3 +83,7 @@ main{min-width:0;overflow-x:hidden}.end.champion{position:relative;isolation:iso
 
 /* v1.0 — formações ligadas às eras do Benfica */
 .formations small{display:flex;align-items:flex-start;flex-direction:column;gap:3px;margin-top:4px}.formations small em{color:var(--red);font-size:5.5px;font-style:normal;letter-spacing:.04em;text-transform:uppercase}
+
+/* v1.0.1 — o teste amigável abre no quadro do jogo */
+.match{scroll-margin-top:90px}
+@media(max-width:760px){.match{scroll-margin-top:75px}}
