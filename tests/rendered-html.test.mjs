@@ -45,6 +45,11 @@ test("keeps the Eternal live-match and expanded champion pool wired", async () =
   assert.match(page, /drawRoute/);
   assert.match(page, /Coleção Eternal · 100\/100/);
   assert.match(page, /Nenhum rosto inventado/);
+  assert.doesNotMatch(page, /Uma experiência impossível/);
+  assert.doesNotMatch(page, /SHOWCASE_IDS/);
+  assert.match(page, /<h3>Formação<\/h3>/);
+  assert.match(page, /<h3>Treinador<\/h3>/);
+  assert.doesNotMatch(page, /01\.A · Formação|01\.B · Treinador/);
   assert.match(page, /champions-trophy\.webp/);
   assert.doesNotMatch(page, /assets\/players/);
   assert.match(page, /pitchName\(pick\.player\.name\)/);
@@ -52,6 +57,8 @@ test("keeps the Eternal live-match and expanded champion pool wired", async () =
   assert.match(css, /grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
   assert.match(css, /\.player-card \.player-identity\{height:auto;aspect-ratio:16\/9/);
   assert.match(css, /\.pitch-pos>small\{display:block;width:62px/);
+  assert.match(css, /\.facts\{display:grid;width:100%;grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+  assert.match(data, /specialRatings:Record<string,number>=\{aimar:99,jonas:96\}/);
   const rivalBlock = data.split("export const rivals:Rival[]=")[1] ?? "";
   assert.equal((rivalBlock.match(/^\{id:/gm) ?? []).length, 24);
   assert.equal((data.match(/current:true/g) ?? []).length, 1);
