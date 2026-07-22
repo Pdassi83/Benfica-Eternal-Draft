@@ -61,6 +61,7 @@ test("keeps the Eternal live-match and expanded champion pool wired", async () =
   assert.match(css, /\.player-card \.player-identity\{height:auto;aspect-ratio:16\/9/);
   assert.match(css, /\.pitch-pos>small\{display:block;width:62px/);
   assert.match(css, /\.facts\{display:grid;width:100%;grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+  assert.match(css, /\.identity-preview>div:only-child\{display:block;width:100%;min-width:0\}/);
   assert.match(data, /specialRatings:Record<string,number>=\{aimar:99,jonas:96\}/);
   assert.match(page, /Partilhar o desafio/);
   assert.match(page, /Privacidade e aviso legal/);
