@@ -118,8 +118,15 @@ export const coaches:Coach[]=[
 {id:"camacho",name:"José A. Camacho",era:"2002–08",rating:87,style:"Intensidade",bonus:"+3 duelos",trait:"controlo"},
 {id:"jesus",name:"Jorge Jesus",era:"2009–20",rating:94,style:"Ataque posicional",bonus:"+4 ataque",trait:"ataque"},
 {id:"vitoria",name:"Rui Vitória",era:"2015–19",rating:88,style:"Talento jovem",bonus:"+3 à formação",trait:"controlo"}];
-export const formations={"4-3-3":["GR","LE","DC","DC","LD","MC","MC","MO","EE","PL","ED"],"4-2-3-1":["GR","LE","DC","DC","LD","MD","MC","EE","MO","ED","PL"],"4-4-2 D":["GR","LE","DC","DC","LD","MD","MC","MC","MO","PL","PL"],"3-4-3":["GR","DC","DC","DC","AE","MC","MC","AD","EE","PL","ED"]} satisfies Record<string,Slot[]>;
+export const formations={"4-2-4":["GR","LE","DC","DC","LD","MC","MC","EE","PL","PL","ED"],"4-4-2":["GR","LE","DC","DC","LD","EE","MC","MC","ED","PL","PL"],"4-4-2 D":["GR","LE","DC","DC","LD","MD","MC","MC","MO","PL","PL"],"4-2-3-1":["GR","LE","DC","DC","LD","MD","MC","EE","MO","ED","PL"],"4-3-3":["GR","LE","DC","DC","LD","MC","MC","MO","EE","PL","ED"]} satisfies Record<string,Slot[]>;
 export type Formation=keyof typeof formations;
+export const formationHistory:Record<Formation,{label:string;era:string;identity:string}>={
+ "4-2-4":{label:"4-2-4",era:"Guttmann · 1959–62",identity:"Bicampeões europeus"},
+ "4-4-2":{label:"4-4-2",era:"Eriksson · anos 80/90",identity:"Bloco e organização europeia"},
+ "4-4-2 D":{label:"4-4-2 Losango",era:"Jorge Jesus · 2009–15",identity:"Ataque por dentro"},
+ "4-2-3-1":{label:"4-2-3-1",era:"Benfica moderno · 2015–",identity:"Entrelinhas e pressão"},
+ "4-3-3":{label:"4-3-3",era:"Escola moderna",identity:"Largura e controlo"}
+};
 export const links=[[["eusebio","coluna"],"Eixo bicampeão europeu",9],[["eusebio","torres"],"Pantera & Bom Gigante",6],[["chalana","nene"],"Génio e finalização",5],[["jvp","isaias"],"Ouro e canhão",7],[["rui-costa","nuno-gomes"],"Maestro & ponta",6],[["simao","nuno-gomes"],"Capitães do renascimento",5],[["aimar","saviola"],"Dupla de sonho argentina",9],[["aimar","cardozo"],"Passe e martelo",7],[["luisao","garay"],"Muralha de 2014",7],[["luisao","jardel"],"Torres do tetra",5],[["enzo","matic"],"Meio-campo de 2014",7],[["gaitan","cardozo"],"Criação e finalização",6],[["gaitan","salvio"],"Alas de 2014",5],[["jonas","pizzi"],"Sociedade do tetra",9],[["jonas","mitroglou"],"Golos do tetra",7],[["bernardo","cancelo"],"Geração 94",5],[["renato","fejsa"],"Equilíbrio do tri",5]] as [string[],string,number][];
 export type Rival={id:string;name:string;edition:string;rating:number;att:number;mid:number;def:number;identity:string;core:string;colors:[string,string];current?:boolean};
 export const rivals:Rival[]=[
