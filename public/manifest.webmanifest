@@ -1,7 +1,7 @@
 {
-  "name": "Benfica Eternal Draft",
-  "short_name": "Eternal Draft",
-  "description": "Constrói um onze de lendas e disputa uma Champions Eternal.",
+  "name": "Benfica Legends Draft",
+  "short_name": "Legends Draft",
+  "description": "Constrói um onze de lendas e disputa uma Champions Legends.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#171613",
@@ -10,7 +10,7 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/eternal-icon.svg",
+      "src": "/legends-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
