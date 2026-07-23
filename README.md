@@ -31,8 +31,8 @@ npm run lint
 
 ## Métricas
 
-O site está preparado para Cloudflare Web Analytics sem cookies. Depois de
-criar uma propriedade no painel da Cloudflare, adicione ao ambiente de produção:
+O site utiliza Cloudflare Web Analytics sem cookies. O identificador público da
+propriedade está configurado no layout e pode ser substituído por uma variável:
 
 ```text
 NEXT_PUBLIC_CLOUDFLARE_ANALYTICS_TOKEN=token_da_propriedade

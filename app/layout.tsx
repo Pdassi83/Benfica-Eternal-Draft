@@ -81,7 +81,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const analyticsToken = process.env.NEXT_PUBLIC_CLOUDFLARE_ANALYTICS_TOKEN;
+  const analyticsToken =
+    process.env.NEXT_PUBLIC_CLOUDFLARE_ANALYTICS_TOKEN ??
+    "85900819284b43ca9ff37bebcbf5202d";
   return (
     <html lang="pt-PT">
       <body
