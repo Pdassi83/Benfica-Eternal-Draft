@@ -73,11 +73,16 @@ test("keeps the Eternal live-match and expanded champion pool wired", async () =
   assert.match(page, /Partilhar o desafio/);
   assert.match(page, /Privacidade e aviso legal/);
   assert.match(page, /Projeto independente/);
+  assert.match(page, /setSelectedRival\(r\)/);
+  assert.match(page, /Onze inicial da final/);
+  assert.match(page, /Titulares ao apito inicial/);
+  assert.match(css, /\.final-xi\{display:grid/);
   assert.match(layout, /openGraph:/);
   assert.match(layout, /manifest: "\/manifest\.webmanifest"/);
   assert.equal(JSON.parse(manifest).display, "standalone");
   assert.match(robots, /Allow: \//);
-  const rivalBlock = data.split("export const rivals:Rival[]=")[1] ?? "";
+  const rivalBlock = data.split("const rivalBase:RivalBase[]=")[1] ?? "";
   assert.equal((rivalBlock.match(/^\{id:/gm) ?? []).length, 24);
+  assert.equal((data.match(/starters:\[/g) ?? []).length, 24);
   assert.equal((data.match(/current:true/g) ?? []).length, 1);
 });
