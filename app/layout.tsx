@@ -15,19 +15,19 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://benfica-eternal-draft.pdassi.chatgpt.site"),
   title: {
-    default: "Benfica Eternal Draft — Onze lendas, uma Europa eterna",
-    template: "%s · Benfica Eternal Draft",
+    default: "Benfica Legends Draft — Onze lendas, uma Europa eterna",
+    template: "%s · Benfica Legends Draft",
   },
   description:
-    "Escolhe um onze de 100 lendas do Benfica e disputa uma Champions Eternal contra campeões europeus de todas as eras.",
-  applicationName: "Benfica Eternal Draft",
-  keywords: ["Benfica", "draft", "futebol", "lendas", "Champions Eternal"],
+    "Escolhe um onze de 100 lendas do Benfica e disputa uma Champions Legends contra campeões europeus de todas as eras.",
+  applicationName: "Benfica Legends Draft",
+  keywords: ["Benfica", "draft", "futebol", "lendas", "Champions Legends"],
   category: "game",
   manifest: "/manifest.webmanifest",
   openGraph: {
     type: "website",
     locale: "pt_PT",
-    siteName: "Benfica Eternal Draft",
+    siteName: "Benfica Legends Draft",
     title: "Onze lendas. Uma Europa eterna.",
     description:
       "Faz o teu XI de lendas do Benfica e enfrenta os campeões europeus de todas as eras.",
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: "Benfica Eternal Draft",
+    title: "Benfica Legends Draft",
     description: "Onze lendas. Uma Europa eterna. Constrói o teu XI.",
     images: ["/assets/benfica-current.png"],
   },
@@ -52,7 +52,7 @@ export const metadata: Metadata = {
   },
   appleWebApp: {
     capable: true,
-    title: "Eternal Draft",
+    title: "Legends Draft",
     statusBarStyle: "black-translucent",
   },
   formatDetection: {
@@ -62,8 +62,8 @@ export const metadata: Metadata = {
     "codex-preview": "development",
   },
   icons: {
-    icon: "/eternal-icon.svg",
-    shortcut: "/eternal-icon.svg",
+    icon: "/legends-icon.svg",
+    shortcut: "/legends-icon.svg",
     apple: "/assets/benfica-current.png",
   },
 };
