@@ -78,7 +78,16 @@ test("keeps the Legends live-match and expanded champion pool wired", async () =
   assert.match(page, /setSelectedRival\(r\)/);
   assert.match(page, /Onze inicial da final/);
   assert.match(page, /Titulares ao apito inicial/);
+  assert.match(page, /Draft do dia/);
+  assert.match(page, /seededRandom/);
+  assert.match(page, /Europe\/Lisbon/);
+  assert.match(page, /O mesmo XI produz o mesmo jogo/);
+  assert.match(page, /function ChampionCard/);
+  assert.match(page, /Partilhar cartão/);
+  assert.match(page, /Marcadores da final/);
   assert.match(css, /\.final-xi\{display:grid/);
+  assert.match(css, /\.daily-challenge\{display:grid/);
+  assert.match(css, /\.champion-card\{/);
   assert.match(layout, /openGraph:/);
   assert.match(layout, /manifest: "\/manifest\.webmanifest"/);
   assert.equal(JSON.parse(manifest).display, "standalone");
