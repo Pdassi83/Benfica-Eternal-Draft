@@ -1,5 +1,5 @@
 {
-  "name": "benfica-eternal-draft",
+  "name": "benfica-legends-draft",
   "version": "0.1.0",
   "private": true,
   "engines": {
@@ -41,5 +41,5 @@
     "wrangler": "4.92.0"
   },
   "type": "module",
-  "displayName": "Benfica Eternal Draft"
+  "displayName": "Benfica Legends Draft"
 }
