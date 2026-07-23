@@ -33,20 +33,21 @@ test("renders development preview metadata", async () => {
   assert.match(await response.text(), developmentPreviewMeta);
 });
 
-test("keeps the Eternal live-match and expanded champion pool wired", async () => {
-  const [page, data, css, layout, manifest, robots] = await Promise.all([
+test("keeps the Legends live-match and expanded champion pool wired", async () => {
+  const [page, data, css, layout, manifest, robots, icon] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/data.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../public/manifest.webmanifest", import.meta.url), "utf8"),
     readFile(new URL("../public/robots.txt", import.meta.url), "utf8"),
+    readFile(new URL("../public/legends-icon.svg", import.meta.url), "utf8"),
   ]);
 
   assert.match(page, /type LiveMatch=/);
   assert.match(page, /penaltyShootout/);
   assert.match(page, /drawRoute/);
-  assert.match(page, /Coleção Eternal · 100\/100/);
+  assert.match(page, /Coleção Legends · 100\/100/);
   assert.match(page, /Nenhum rosto inventado/);
   assert.doesNotMatch(page, /Uma experiência impossível/);
   assert.doesNotMatch(page, /SHOWCASE_IDS/);
@@ -62,6 +63,7 @@ test("keeps the Eternal live-match and expanded champion pool wired", async () =
   assert.match(css, /\.pitch-pos>small\{display:block;width:62px/);
   assert.match(css, /\.facts\{display:grid;width:100%;grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
   assert.match(css, /\.identity-preview>div:only-child\{display:block;width:100%;min-width:0\}/);
+  assert.match(css, /\.title\{display:grid;grid-template-columns:160px minmax\(0,1fr\);column-gap:28px/);
   assert.match(data, /specialRatings:Record<string,number>=\{aimar:99,jonas:96\}/);
   assert.match(data, /"4-2-4":\["GR","LE","DC","DC","LD","MC","MC","EE","PL","PL","ED"\]/);
   assert.match(data, /"4-4-2":\["GR","LE","DC","DC","LD","EE","MC","MC","ED","PL","PL"\]/);
@@ -80,6 +82,9 @@ test("keeps the Eternal live-match and expanded champion pool wired", async () =
   assert.match(layout, /openGraph:/);
   assert.match(layout, /manifest: "\/manifest\.webmanifest"/);
   assert.equal(JSON.parse(manifest).display, "standalone");
+  assert.equal(JSON.parse(manifest).name, "Benfica Legends Draft");
+  assert.match(icon, />L<\/text>/);
+  assert.doesNotMatch(icon, />E<\/text>/);
   assert.match(robots, /Allow: \//);
   const rivalBlock = data.split("const rivalBase:RivalBase[]=")[1] ?? "";
   assert.equal((rivalBlock.match(/^\{id:/gm) ?? []).length, 24);
