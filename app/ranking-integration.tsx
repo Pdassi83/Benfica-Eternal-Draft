@@ -110,15 +110,10 @@ export default function RankingIntegration(){
    const nextScore=end&&nextSnapshot?ensureHost(end,"score-submit-host","inside"):null;
    if(nextScore!==scoreHost)setScoreHost(nextScore);
    setSnapshot(current=>JSON.stringify(current)===JSON.stringify(nextSnapshot)?current:nextSnapshot);
-
-   const footer=document.querySelector<HTMLElement>("footer>span");
-   if(footer&&footer.textContent!=="Benfica Legends Draft · v1.4 · Beta pública")footer.textContent="Benfica Legends Draft · v1.4 · Beta pública";
-   const privacy=document.querySelector<HTMLElement>(".legal-modal p:nth-of-type(2)");
-   if(privacy)privacy.textContent="O ranking guarda o nickname escolhido, o resultado e um identificador anónimo criado no navegador. Não pede nome real, email ou conta. Utiliza Cloudflare Web Analytics para medir visitas de forma agregada, sem cookies nem perfis individuais.";
   };
   sync();
   const observer=new MutationObserver(sync);
-  observer.observe(document.body,{childList:true,subtree:true,characterData:true});
+  observer.observe(document.body,{childList:true,subtree:true});
   return()=>observer.disconnect();
  },[homeHost,scoreHost]);
 
