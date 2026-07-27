@@ -59,6 +59,10 @@ function ensureHost(target:Element|null,className:string,placement:"after"|"insi
  return host;
 }
 
+function replaceText(target:Element|null,text:string){
+ if(target&&target.textContent!==text)target.textContent=text;
+}
+
 function readCampaignSnapshot():CampaignSnapshot|null{
  const end=document.querySelector<HTMLElement>(".cup .end");
  if(!end)return null;
@@ -124,6 +128,15 @@ export default function RankingIntegration(){
    if(nextHome!==homeHost)setHomeHost(nextHome);
 
    const end=document.querySelector<HTMLElement>(".cup .end");
+   const lossEnd=document.querySelector<HTMLElement>(".cup .end:not(.champion)");
+   if(lossEnd){
+    replaceText(lossEnd.querySelector("small"),"Fim da campanha");
+    replaceText(lossEnd.querySelector("h2"),"No Benfica, perder, nem a feijões.");
+    replaceText(lossEnd.querySelector("p"),"Vamos tentar outra vez. Mantém o onze e volta à luta.");
+    const retry=lossEnd.querySelector<HTMLButtonElement>(".restart-link");
+    if(retry?.textContent?.includes("Novo sorteio"))replaceText(retry,"Vamos tentar outra vez ↻");
+   }
+
    const nextSnapshot=readCampaignSnapshot();
    const championCard=document.querySelector<HTMLElement>(".champion-card");
    const nextSquad=championCard&&nextSnapshot?.champion?ensureHost(championCard,"champion-squad-host","before-scorers"):null;
