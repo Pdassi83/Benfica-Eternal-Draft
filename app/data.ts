@@ -1,15 +1,13 @@
 export * from "./data-original";
 
-import {players as basePlayers,type Player} from "./data-original";
+import {players as basePlayers,rating as playerRating,type Player} from "./data-original";
 
 type PlayerCompare=(a:Player,b:Player)=>number;
 
 const FEATURED_IDS=["eusebio","aimar","jonas"] as const;
+const RARITY_WEIGHTS:Record<number,number>={95:.72,96:.56,97:.42,98:.30,99:.20};
 const hash=(value:string)=>[...value].reduce((sum,char,index)=>sum+char.charCodeAt(0)*(index+11),0);
 const classicScore=(id:string,multiplier:number)=>(hash(id)*multiplier)%997;
-
-let featuredId:string=FEATURED_IDS[0];
-let featuredOffered=false;
 
 function detectClassicMultiplier(items:Player[],compare:PlayerCompare){
  if(items.length<4)return null;
@@ -25,11 +23,22 @@ function detectClassicMultiplier(items:Player[],compare:PlayerCompare){
  return null;
 }
 
-function shuffle(items:Player[]){
- for(let index=items.length-1;index>0;index--){
-  const swapIndex=Math.floor(Math.random()*(index+1));
-  [items[index],items[swapIndex]]=[items[swapIndex],items[index]];
+function rarityWeight(player:Player){
+ const value=playerRating(player);
+ if(value<95)return 1;
+ if(value>=100){
+  return FEATURED_IDS.includes(player.id as typeof FEATURED_IDS[number])?.12:.10;
  }
+ return RARITY_WEIGHTS[value]??.12;
+}
+
+function weightedShuffle(items:Player[]){
+ const ranked=items.map((player,index)=>({
+  player,
+  index,
+  key:-Math.log(Math.max(Math.random(),Number.EPSILON))/rarityWeight(player),
+ })).sort((a,b)=>a.key-b.key||a.index-b.index);
+ for(let index=0;index<ranked.length;index++)items[index]=ranked[index].player;
 }
 
 class PlayerPool extends Array<Player>{
@@ -38,23 +47,7 @@ class PlayerPool extends Array<Player>{
    return super.sort(compare) as this;
   }
 
-  const goalkeeperPack=this.length>0&&this.every(player=>player.positions.includes("GR"));
-  if(goalkeeperPack){
-   featuredId=FEATURED_IDS[Math.floor(Math.random()*FEATURED_IDS.length)];
-   featuredOffered=false;
-  }
-
-  shuffle(this);
-
-  if(!featuredOffered){
-   const featuredIndex=this.findIndex(player=>player.id===featuredId);
-   if(featuredIndex>=0){
-    const visibleIndex=Math.min(3,this.length-1);
-    [this[visibleIndex],this[featuredIndex]]=[this[featuredIndex],this[visibleIndex]];
-    featuredOffered=true;
-   }
-  }
-
+  weightedShuffle(this);
   return this;
  }
 }
