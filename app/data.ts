@@ -33,7 +33,7 @@ function rarityWeight(player:Player){
 }
 
 function weightedShuffle(items:Player[]){
- const ranked=items.map((player,index)=>({
+ const ranked=Array.from(items,(player,index)=>({
   player,
   index,
   key:-Math.log(Math.max(Math.random(),Number.EPSILON))/rarityWeight(player),
