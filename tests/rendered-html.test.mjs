@@ -34,15 +34,17 @@ test("renders development preview metadata", async () => {
 });
 
 test("keeps the Legends live-match and expanded champion pool wired", async () => {
-  const [page, data, css, layout, manifest, robots, icon] = await Promise.all([
+  const [page, dataRuntime, dataOriginal, css, layout, manifest, robots, icon] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/data.ts", import.meta.url), "utf8"),
+    readFile(new URL("../app/data-original.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../public/manifest.webmanifest", import.meta.url), "utf8"),
     readFile(new URL("../public/robots.txt", import.meta.url), "utf8"),
     readFile(new URL("../public/legends-icon.svg", import.meta.url), "utf8"),
   ]);
+  const data = `${dataRuntime}\n${dataOriginal}`;
 
   assert.match(page, /type LiveMatch=/);
   assert.match(page, /penaltyShootout/);
@@ -64,6 +66,8 @@ test("keeps the Legends live-match and expanded champion pool wired", async () =
   assert.match(css, /\.facts\{display:grid;width:100%;grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
   assert.match(css, /\.identity-preview>div:only-child\{display:block;width:100%;min-width:0\}/);
   assert.match(css, /\.title\{display:grid;grid-template-columns:160px minmax\(0,1fr\);column-gap:28px/);
+  assert.match(dataRuntime, /class PlayerPool extends Array<Player>/);
+  assert.match(dataRuntime, /FEATURED_IDS=\["eusebio","aimar","jonas"\]/);
   assert.match(data, /specialRatings:Record<string,number>=\{aimar:99,jonas:96\}/);
   assert.match(data, /"4-2-4":\["GR","LE","DC","DC","LD","MC","MC","EE","PL","PL","ED"\]/);
   assert.match(data, /"4-4-2":\["GR","LE","DC","DC","LD","EE","MC","MC","ED","PL","PL"\]/);
