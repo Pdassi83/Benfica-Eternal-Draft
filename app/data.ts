@@ -33,8 +33,6 @@ function shuffle(items:Player[]){
 }
 
 class PlayerPool extends Array<Player>{
- static get [Symbol.species](){return PlayerPool}
-
  sort(compare?:PlayerCompare):this{
   if(!compare||detectClassicMultiplier(this,compare)===null){
    return super.sort(compare) as this;
