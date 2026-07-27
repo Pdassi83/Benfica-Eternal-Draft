@@ -101,8 +101,8 @@ export default function RankingIntegration(){
 
  useEffect(()=>{
   const sync=()=>{
-   const daily=document.querySelector(".daily-challenge");
-   const nextHome=daily?ensureHost(daily,"ranking-react-host","after"):null;
+   const banner=document.querySelector(".hero");
+   const nextHome=banner?ensureHost(banner,"ranking-react-host","after"):null;
    if(nextHome!==homeHost)setHomeHost(nextHome);
 
    const end=document.querySelector<HTMLElement>(".cup .end");
