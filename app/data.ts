@@ -27,7 +27,7 @@ function rarityWeight(player:Player){
  const value=playerRating(player);
  if(value<95)return 1;
  if(value>=100){
-  return FEATURED_IDS.includes(player.id as typeof FEATURED_IDS[number])?.12:.10;
+  return FEATURED_IDS.includes(player.id as typeof FEATURED_IDS[number]) ? .12 : .10;
  }
  return RARITY_WEIGHTS[value]??.12;
 }
